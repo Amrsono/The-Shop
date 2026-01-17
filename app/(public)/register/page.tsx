@@ -157,7 +157,7 @@ export default function RegisterPage() {
 
                         <div className="mt-8 text-center">
                             <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
-                                Already identified? <Link href="/login" className="text-primary hover:underline">Return to Portal</Link>
+                                already registered? <Link href="/login" className="text-primary hover:underline">return to login</Link>
                             </p>
                         </div>
                     </div>
