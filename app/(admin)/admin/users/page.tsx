@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UsersTable } from '@/components/admin/UsersTable';
-import { Users, Search, RefreshCw, Filter } from 'lucide-react';
+import { Users, Search, RefreshCw, Shield, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
