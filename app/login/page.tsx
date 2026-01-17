@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -21,16 +22,24 @@ export default function LoginPage() {
         setIsLoading(true);
         setError('');
 
-        // Simulate network latency
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        // Logic for the requested profiles
-        if (email === 'user@thestore.com' && password === 'userpassword@26') {
-            router.push('/profile');
-        } else if (email === 'Admin@thestore.com' && password === 'Admin@2026') {
-            router.push('/admin');
-        } else {
-            setError('Invalid credentials. Please verify your identity protocol.');
+            if (error) throw error;
+
+            // Simple role-based redirection logic
+            // In a real app, you'd check a 'profiles' table for the role
+            if (email.toLowerCase().includes('admin')) {
+                router.push('/admin');
+            } else {
+                router.push('/profile');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Invalid credentials. Please verify your identity protocol.');
+        } finally {
             setIsLoading(false);
         }
     };

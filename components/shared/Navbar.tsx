@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { useCart } from '@/lib/context/CartContext';
+import { useAuth } from '@/lib/context/AuthContext';
 import Image from 'next/image';
 
 export function Navbar() {
@@ -21,6 +22,7 @@ export function Navbar() {
     const { scrollY } = useScroll();
     const { setLanguage, t } = useLanguage();
     const { cartItems, cartCount, cartTotal, removeFromCart, updateQuantity } = useCart();
+    const { signOut } = useAuth();
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         setIsScrolled(latest > 50);
@@ -182,7 +184,12 @@ export function Navbar() {
                             <DropdownMenuItem asChild className="cursor-pointer">
                                 <Link href="/admin">{t('admin')} {t('dashboard')}</Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive font-bold cursor-pointer">{t('logout')}</DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="text-destructive font-bold cursor-pointer"
+                                onClick={() => signOut()}
+                            >
+                                {t('logout')}
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 

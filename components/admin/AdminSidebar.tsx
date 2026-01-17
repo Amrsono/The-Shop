@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/context/AuthContext';
 
 const sidebarItems = [
     { name: 'View Store', href: '/', icon: Home },
@@ -26,6 +27,7 @@ const sidebarItems = [
 
 export function AdminSidebar() {
     const pathname = usePathname();
+    const { signOut } = useAuth();
 
     return (
         <div className="h-screen w-64 glass-dark text-white flex flex-col fixed left-0 top-0 overflow-y-auto border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.3)]">
@@ -55,7 +57,11 @@ export function AdminSidebar() {
             </nav>
 
             <div className="p-6 border-t border-white/5 mt-auto">
-                <Button variant="ghost" className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-2xl h-14 font-black uppercase tracking-widest text-[10px]">
+                <Button
+                    variant="ghost"
+                    className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-2xl h-14 font-black uppercase tracking-widest text-[10px]"
+                    onClick={() => signOut()}
+                >
                     <LogOut className="w-5 h-5 mr-3" />
                     Logout Account
                 </Button>
