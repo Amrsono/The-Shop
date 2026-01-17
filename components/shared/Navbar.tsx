@@ -22,7 +22,7 @@ export function Navbar() {
     const { scrollY } = useScroll();
     const { setLanguage, t } = useLanguage();
     const { cartItems, cartCount, cartTotal, removeFromCart, updateQuantity } = useCart();
-    const { signOut } = useAuth();
+    const { user, profile, signOut } = useAuth();
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         setIsScrolled(latest > 50);
@@ -172,27 +172,43 @@ export function Navbar() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="glass-dark border-white/10 shadow-2xl min-w-[220px] rounded-2xl p-2">
-                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-primary border-b border-white/5">
-                                <Link href="/login">Protocol Login</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-emerald-400">
-                                <Link href="/register">Identity Registry</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-white">
-                                <Link href="/profile">{t('my_profile')}</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild className="cursor-pointer">
-                                <Link href="/orders">{t('my_orders')}</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild className="cursor-pointer">
-                                <Link href="/admin">{t('admin')} {t('dashboard')}</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="text-destructive font-bold cursor-pointer"
-                                onClick={() => signOut()}
-                            >
-                                {t('logout')}
-                            </DropdownMenuItem>
+                            {!user ? (
+                                <>
+                                    <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-primary border-b border-white/5">
+                                        <Link href="/login">Login</Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-emerald-400 border-b border-white/5">
+                                        <Link href="/register">Register Now</Link>
+                                    </DropdownMenuItem>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="px-3 py-2 mb-2 border-b border-white/5">
+                                        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Authenticated as</p>
+                                        <p className="text-[10px] font-bold text-white truncate">{user.email}</p>
+                                        {profile?.role === 'admin' && (
+                                            <span className="inline-block mt-1 px-2 py-0.5 bg-primary/20 text-primary text-[8px] font-black uppercase tracking-tighter rounded-full">Administrator</span>
+                                        )}
+                                    </div>
+                                    <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-2 mb-1 font-bold text-xs">
+                                        <Link href="/profile">{t('my_profile')}</Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-2 mb-1 font-bold text-xs">
+                                        <Link href="/orders">{t('my_orders')}</Link>
+                                    </DropdownMenuItem>
+                                    {profile?.role === 'admin' && (
+                                        <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-2 mb-1 font-black text-[10px] uppercase tracking-widest text-primary">
+                                            <Link href="/admin">{t('admin')} {t('dashboard')}</Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem
+                                        className="text-destructive font-black text-[10px] uppercase tracking-widest cursor-pointer hover:bg-destructive/5 rounded-xl mt-2 py-3"
+                                        onClick={() => signOut()}
+                                    >
+                                        {t('logout')}
+                                    </DropdownMenuItem>
+                                </>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
 
