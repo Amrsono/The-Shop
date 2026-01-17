@@ -66,7 +66,7 @@ function LoginForm() {
             <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Universal ID</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Username</Label>
                         <div className="relative group">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                             <Input
@@ -81,7 +81,7 @@ function LoginForm() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Pass-Key</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Password</Label>
                         <div className="relative group">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                             <Input
@@ -117,7 +117,7 @@ function LoginForm() {
                     {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                        <span className="flex items-center gap-2">Initiate Access <ArrowRight className="w-4 h-4" /></span>
+                        <span className="flex items-center gap-2">Login <ArrowRight className="w-4 h-4" /></span>
                     )}
                 </Button>
             </form>

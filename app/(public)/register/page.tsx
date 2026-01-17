@@ -85,7 +85,7 @@ export default function RegisterPage() {
                         <form onSubmit={handleRegister} className="space-y-5">
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Legal Name</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Full Name</Label>
                                     <div className="relative group">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                                         <Input
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Email Terminal</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Email Address</Label>
                                     <div className="relative group">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                                         <Input
@@ -114,7 +114,7 @@ export default function RegisterPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Access Code</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Password</Label>
                                     <div className="relative group">
                                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                                         <Input
@@ -150,7 +150,7 @@ export default function RegisterPage() {
                                 {isLoading ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    <span className="flex items-center gap-2">Register Now <ArrowRight className="w-4 h-4" /></span>
+                                    <span className="flex items-center gap-2">Register <ArrowRight className="w-4 h-4" /></span>
                                 )}
                             </Button>
                         </form>
