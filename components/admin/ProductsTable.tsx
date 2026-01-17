@@ -31,7 +31,7 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products, onEdit, onDelete }: ProductsTableProps) {
     return (
-        <div className="glass rounded-[2rem] overflow-hidden border-white/5 shadow-2xl">
+        <div className="glass-dark rounded-[2rem] overflow-hidden border-white/5 shadow-2xl">
             <Table>
                 <TableHeader className="bg-white/5">
                     <TableRow className="border-white/5 hover:bg-transparent">
