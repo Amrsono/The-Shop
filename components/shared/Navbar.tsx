@@ -172,8 +172,11 @@ export function Navbar() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="glass-dark border-white/10 shadow-2xl min-w-[220px] rounded-2xl p-2">
-                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-primary">
+                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-primary border-b border-white/5">
                                 <Link href="/login">Protocol Login</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-emerald-400">
+                                <Link href="/register">Identity Registry</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild className="cursor-pointer hover:bg-white/5 rounded-xl py-3 mb-1 font-black text-[10px] uppercase tracking-widest text-white">
                                 <Link href="/profile">{t('my_profile')}</Link>

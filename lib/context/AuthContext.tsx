@@ -10,6 +10,7 @@ interface AuthContextType {
     session: Session | null;
     isLoading: boolean;
     signOut: () => Promise<void>;
+    signUp: (email: string, password: string, metadata?: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,8 +53,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const signUp = async (email: string, password: string, metadata?: any) => {
+        setIsLoading(true);
+        try {
+            const { error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: metadata,
+                },
+            });
+            if (error) throw error;
+            router.push('/login?message=Verification email sent');
+        } catch (error) {
+            console.error('Error signing up:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, session, isLoading, signOut }}>
+        <AuthContext.Provider value={{ user, session, isLoading, signOut, signUp }}>
             {children}
         </AuthContext.Provider>
     );
