@@ -1,24 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, Mail, User, Loader2, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User, Loader2, ArrowRight, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/context/AuthContext';
 import Link from 'next/link';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const { signUp } = useAuth();
+    const { signUp, resendVerification } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (countdown > 0) {
+            timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+        }
+        return () => clearTimeout(timer);
+    }, [countdown]);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,8 +37,22 @@ export default function RegisterPage() {
         try {
             await signUp(email, password, { full_name: fullName });
             setSuccess(true);
+            setCountdown(60);
         } catch (err: any) {
             setError(err.message || 'Registration failed. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        if (countdown > 0 || isLoading) return;
+        setIsLoading(true);
+        try {
+            await resendVerification(email);
+            setCountdown(60);
+        } catch (err: any) {
+            setError(err.message || 'Failed to resend email.');
         } finally {
             setIsLoading(false);
         }
@@ -50,9 +73,27 @@ export default function RegisterPage() {
                         <p className="text-white/60 mb-8 font-medium">
                             Please check your email to verify your identity. Once confirmed, you can access the protocol.
                         </p>
-                        <Button asChild className="w-full h-16 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs">
-                            <Link href="/login">Back to Login</Link>
-                        </Button>
+
+                        <div className="space-y-4">
+                            <Button asChild className="w-full h-16 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs">
+                                <Link href="/login">Back to Login</Link>
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                onClick={handleResend}
+                                disabled={countdown > 0 || isLoading}
+                                className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors h-10"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : countdown > 0 ? (
+                                    `Resend in ${countdown}s`
+                                ) : (
+                                    <span className="flex items-center"><RotateCcw className="w-3 h-3 mr-2" /> Resend Verification Email</span>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </motion.div>
             </div>

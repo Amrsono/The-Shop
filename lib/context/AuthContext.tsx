@@ -11,6 +11,7 @@ interface AuthContextType {
     isLoading: boolean;
     signOut: () => Promise<void>;
     signUp: (email: string, password: string, metadata?: any) => Promise<void>;
+    resendVerification: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,8 +74,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const resendVerification = async (email: string) => {
+        setIsLoading(true);
+        try {
+            const { error } = await supabase.auth.resend({
+                type: 'signup',
+                email: email,
+            });
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error resending verification:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, session, isLoading, signOut, signUp }}>
+        <AuthContext.Provider value={{ user, session, isLoading, signOut, signUp, resendVerification }}>
             {children}
         </AuthContext.Provider>
     );
