@@ -150,7 +150,7 @@ export default function RegisterPage() {
                                 {isLoading ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    <span className="flex items-center gap-2">Authorize Registry <ArrowRight className="w-4 h-4" /></span>
+                                    <span className="flex items-center gap-2">Register Now <ArrowRight className="w-4 h-4" /></span>
                                 )}
                             </Button>
                         </form>
