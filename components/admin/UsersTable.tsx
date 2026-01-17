@@ -19,6 +19,10 @@ interface Profile {
     role: 'user' | 'admin';
     loyalty_points: number;
     created_at: string;
+    // Analytics fields
+    orders_count?: number;
+    total_spent?: number;
+    most_purchased_product?: string;
 }
 
 interface UsersTableProps {
@@ -30,17 +34,19 @@ export function UsersTable({ users }: UsersTableProps) {
         <div className="glass-dark rounded-[2.5rem] overflow-hidden border-white/5 shadow-2xl">
             <Table>
                 <TableHeader className="bg-white/5">
-                    <TableRow className="border-white/5 hover:bg-transparent">
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pl-8">Identity</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Authority Role</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Loyalty Status</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Registry Date</TableHead>
+                    <TableRow className="border-white/5 hover:bg-transparent text-center">
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pl-8 text-left">Protocol Identity</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Authority</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Orders</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Total Valuation</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Primary Asset</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Loyalty</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {users.length === 0 ? (
                         <TableRow className="hover:bg-transparent">
-                            <TableCell colSpan={4} className="h-60 text-center">
+                            <TableCell colSpan={6} className="h-60 text-center">
                                 <div className="flex flex-col items-center justify-center gap-4 opacity-20">
                                     <User className="w-12 h-12" />
                                     <p className="font-black uppercase tracking-[0.4em] text-xs">No user protocols detected.</p>
@@ -48,53 +54,59 @@ export function UsersTable({ users }: UsersTableProps) {
                             </TableCell>
                         </TableRow>
                     ) : (
-                        users.map((user) => (
-                            <TableRow key={user.id} className="border-white/5 hover:bg-white/5 transition-all duration-300 group">
-                                <TableCell className="py-8 pl-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative h-14 w-14 rounded-2xl overflow-hidden glass border-white/10 flex items-center justify-center bg-white/5 group-hover:scale-110 transition-transform duration-500">
-                                            <User className="w-6 h-6 text-primary" />
+                        users.map((user) => {
+                            const firstName = user.full_name?.split(' ')[0] || 'Unknown';
+                            const username = user.email?.split('@')[0] || 'anon';
+
+                            return (
+                                <TableRow key={user.id} className="border-white/5 hover:bg-white/5 transition-all duration-300 group">
+                                    <TableCell className="py-8 pl-8">
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative h-14 w-14 rounded-2xl overflow-hidden glass border-white/10 flex items-center justify-center bg-white/5 group-hover:scale-110 transition-transform duration-500">
+                                                <User className="w-6 h-6 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-white text-base tracking-tight">{firstName}</p>
+                                                <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">@{username}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-black text-white text-base tracking-tight">{user.full_name || 'Anonymous User'}</p>
-                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">{user.email || 'No Email Registered'}</p>
+                                    </TableCell>
+                                    <TableCell className="py-8 text-center">
+                                        <Badge className={cn(
+                                            "border-none rounded-full px-3 py-1 flex items-center gap-2 mx-auto w-fit",
+                                            user.role === 'admin'
+                                                ? "bg-primary text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+                                                : "bg-white/5 text-white/60"
+                                        )}>
+                                            {user.role === 'admin' ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                                            <span className="text-[8px] font-black uppercase tracking-widest">{user.role}</span>
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="py-8 text-center">
+                                        <div className="flex flex-col items-center">
+                                            <p className="font-black text-white text-base">{user.orders_count || 0}</p>
+                                            <p className="text-[8px] font-black uppercase tracking-widest text-white/20">Units</p>
                                         </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="py-8">
-                                    <Badge className={cn(
-                                        "border-none rounded-full px-4 py-1.5 flex items-center gap-2 w-fit",
-                                        user.role === 'admin'
-                                            ? "bg-primary text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]"
-                                            : "bg-white/5 text-white/60"
-                                    )}>
-                                        {user.role === 'admin' ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                                        <span className="text-[10px] font-black uppercase tracking-widest">{user.role}</span>
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="py-8">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-yellow-500/10 rounded-lg">
-                                            <Star className="w-4 h-4 text-yellow-500" />
-                                        </div>
-                                        <div>
+                                    </TableCell>
+                                    <TableCell className="py-8 text-center text-primary font-black">
+                                        EGP {(user.total_spent || 0).toLocaleString()}
+                                    </TableCell>
+                                    <TableCell className="py-8 text-center">
+                                        <p className="text-[10px] font-bold text-white/80 max-w-[120px] mx-auto truncate" title={user.most_purchased_product}>
+                                            {user.most_purchased_product || 'N/A'}
+                                        </p>
+                                    </TableCell>
+                                    <TableCell className="py-8 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="p-2 bg-yellow-500/10 rounded-lg">
+                                                <Star className="w-4 h-4 text-yellow-500" />
+                                            </div>
                                             <p className="font-black text-white text-sm">{user.loyalty_points.toLocaleString()}</p>
-                                            <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Points</p>
                                         </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="py-8">
-                                    <div className="flex items-center gap-2 text-white/60">
-                                        <Clock className="w-4 h-4 text-primary/60" />
-                                        <span className="text-xs font-bold">{new Date(user.created_at).toLocaleDateString(undefined, {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}</span>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })
                     )}
                 </TableBody>
             </Table>

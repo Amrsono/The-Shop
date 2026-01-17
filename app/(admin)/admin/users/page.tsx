@@ -16,6 +16,9 @@ interface Profile {
     role: 'user' | 'admin';
     loyalty_points: number;
     created_at: string;
+    orders_count?: number;
+    total_spent?: number;
+    most_purchased_product?: string;
 }
 
 export default function AdminUsersPage() {
@@ -28,13 +31,59 @@ export default function AdminUsersPage() {
         setIsLoading(true);
         setError(null);
         try {
+            // Fetch profiles with nested orders and items for aggregation
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select(`
+                    *,
+                    orders (
+                        id,
+                        total_amount,
+                        order_items (
+                            quantity,
+                            products (
+                                name_en
+                            )
+                        )
+                    )
+                `)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setUsers(data || []);
+
+            // Process data for analytics
+            const processedUsers = (data || []).map((user: any) => {
+                const orders = user.orders || [];
+                const ordersCount = orders.length;
+                const totalSpent = orders.reduce((sum: number, order: any) => sum + (order.total_amount || 0), 0);
+
+                // Calculate most purchased product
+                const productCounts: Record<string, number> = {};
+                orders.forEach((order: any) => {
+                    order.order_items?.forEach((item: any) => {
+                        const productName = item.products?.name_en || 'Unknown Product';
+                        productCounts[productName] = (productCounts[productName] || 0) + (item.quantity || 1);
+                    });
+                });
+
+                let mostPurchasedProduct = 'N/A';
+                let maxCount = 0;
+                for (const [name, count] of Object.entries(productCounts)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        mostPurchasedProduct = name;
+                    }
+                }
+
+                return {
+                    ...user,
+                    orders_count: ordersCount,
+                    total_spent: totalSpent,
+                    most_purchased_product: mostPurchasedProduct
+                };
+            });
+
+            setUsers(processedUsers);
         } catch (err: any) {
             console.error('Error fetching users:', err);
             setError(err.message);
