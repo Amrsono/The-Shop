@@ -78,18 +78,24 @@ export default function MyOrdersPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-12 pb-24 max-w-5xl">
-            <div className="flex items-center gap-4 mb-10">
-                <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+        <div className="container mx-auto px-4 py-24 pb-24 max-w-5xl relative">
+            {/* Background Accent */}
+            <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/10 blur-[120px] rounded-full -z-10" />
+            <div className="absolute bottom-40 left-0 w-[200px] h-[200px] bg-blue-500/10 blur-[100px] rounded-full -z-10" />
+
+            <div className="flex items-center gap-4 mb-12">
+                <div className="p-4 bg-primary/10 rounded-2xl text-primary border border-primary/20 backdrop-blur-xl">
                     <Package className="w-8 h-8" />
                 </div>
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight">{t('my_orders')}</h1>
-                    <p className="text-muted-foreground">Track and manage your recent purchases</p>
+                    <h1 className="text-4xl font-black tracking-tighter uppercase italic">
+                        <span className="text-gradient">My</span> Orders
+                    </h1>
+                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.4em] mt-1">Purchase Protocol Tracking</p>
                 </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-10">
                 {MOCK_ORDERS.map((order, index) => (
                     <motion.div
                         key={order.id}
@@ -97,66 +103,68 @@ export default function MyOrdersPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                     >
-                        <Card className="overflow-hidden border-none shadow-xl bg-white dark:bg-slate-950 hover:shadow-2xl transition-shadow duration-300">
-                            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b flex flex-row items-center justify-between py-4 px-6">
-                                <div className="flex items-center gap-6">
+                        <Card className="overflow-hidden border-none shadow-2xl glass-dark hover:border-white/10 transition-all duration-500 group rounded-[2.5rem]">
+                            <CardHeader className="bg-white/5 border-b border-white/5 flex flex-row items-center justify-between py-6 px-8">
+                                <div className="flex flex-wrap items-center gap-8">
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Order ID</p>
-                                        <p className="font-mono font-bold text-sm">{order.id}</p>
+                                        <p className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-black mb-1">Order Identifier</p>
+                                        <p className="font-mono font-bold text-sm text-primary tracking-wider">{order.id}</p>
                                     </div>
                                     <div className="hidden sm:block">
-                                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Date Placed</p>
-                                        <p className="font-bold text-sm text-foreground">{new Date(order.date).toLocaleDateString()}</p>
+                                        <p className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-black mb-1">Timestamp</p>
+                                        <p className="font-bold text-sm text-white/80">{new Date(order.date).toLocaleDateString()}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Amount</p>
-                                        <p className="font-bold text-sm text-primary">EGP {order.total.toLocaleString()}</p>
+                                        <p className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-black mb-1">Total Valuation</p>
+                                        <p className="font-black text-sm text-white">EGP {order.total.toLocaleString()}</p>
                                     </div>
                                 </div>
-                                <Badge className={getStatusColor(order.status)}>
-                                    <span className="flex items-center gap-1.5 px-1 py-0.5">
+                                <Badge className={`${getStatusColor(order.status)} border-none rounded-full px-4 py-1`}>
+                                    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
                                         {getStatusIcon(order.status)}
                                         {order.status}
                                     </span>
                                 </Badge>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
+                                <div className="p-8 grid grid-cols-1 md:grid-cols-12 gap-10">
                                     {/* Items List */}
-                                    <div className="md:col-span-8 space-y-4">
+                                    <div className="md:col-span-12 lg:col-span-8 space-y-6">
                                         {order.items.map((item, i) => (
-                                            <div key={i} className="flex gap-4 group">
-                                                <div className="relative w-20 h-20 rounded-xl overflow-hidden border bg-muted flex-shrink-0">
-                                                    <Image src={item.image} alt={item.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                                            <div key={i} className="flex gap-6 group/item">
+                                                <div className="relative w-24 h-24 rounded-2xl overflow-hidden border border-white/5 bg-white/5 flex-shrink-0">
+                                                    <Image src={item.image} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover/item:scale-110" />
                                                 </div>
                                                 <div className="flex flex-col justify-center">
-                                                    <h4 className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{item.name}</h4>
-                                                    <p className="text-xs text-muted-foreground mt-1">Quantity: {item.quantity}</p>
-                                                    <p className="text-sm font-bold mt-1 text-primary">EGP {item.price.toLocaleString()}</p>
+                                                    <h4 className="font-bold text-base text-white group-hover/item:text-primary transition-colors">{item.name}</h4>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-1">Quantity: {item.quantity}</p>
+                                                    <p className="text-sm font-black mt-2 text-primary">EGP {item.price.toLocaleString()}</p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* Shipping Address */}
-                                    <div className="md:col-span-4 bg-slate-50 dark:bg-slate-900/30 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
-                                        <div className="flex items-start gap-3">
-                                            <MapPin className="w-4 h-4 text-primary mt-0.5" />
+                                    <div className="md:col-span-12 lg:col-span-4 bg-white/5 backdrop-blur-xl rounded-[2rem] p-6 border border-white/5 self-start">
+                                        <div className="flex items-start gap-4">
+                                            <div className="p-2 bg-primary/20 rounded-xl text-primary mt-1">
+                                                <MapPin className="w-4 h-4" />
+                                            </div>
                                             <div>
-                                                <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Shipping To</h5>
-                                                <p className="text-sm font-medium leading-relaxed">{order.address}</p>
+                                                <h5 className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 mb-3">Destination Protocol</h5>
+                                                <p className="text-sm font-bold text-white/90 leading-relaxed">{order.address}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </CardContent>
-                            <div className="bg-slate-50/50 dark:bg-slate-900/20 px-6 py-3 border-t flex justify-end gap-3">
-                                <Button variant="ghost" size="sm" className="text-xs font-bold h-8 rounded-full">
-                                    Need Help?
+                            <div className="bg-white/5 px-8 py-5 border-t border-white/5 flex justify-end gap-4 items-center">
+                                <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors h-10 rounded-xl">
+                                    Support Portal
                                 </Button>
                                 <Button
                                     size="sm"
-                                    className="text-xs font-bold h-8 rounded-full px-5 min-w-[120px]"
+                                    className="text-[10px] font-black uppercase tracking-[0.2em] h-12 rounded-xl px-8 min-w-[160px] bg-primary text-white shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:scale-[1.02] transition-all"
                                     onClick={() => handleReorder(order)}
                                     disabled={reorderingId === order.id}
                                 >
@@ -166,11 +174,11 @@ export default function MyOrdersPage() {
                                             animate={{ rotate: 360 }}
                                             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                                         >
-                                            <RotateCcw className="w-3 h-3" />
+                                            <RotateCcw className="w-4 h-4" />
                                         </motion.div>
                                     ) : (
-                                        <span className="flex items-center gap-1">
-                                            Reorder Items <ChevronRight className="ml-1 w-3 h-3" />
+                                        <span className="flex items-center gap-2">
+                                            Re-Initiate <ChevronRight className="w-4 h-4" />
                                         </span>
                                     )}
                                 </Button>
