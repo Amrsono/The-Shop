@@ -91,7 +91,6 @@ export default function MyOrdersPage() {
                     <h1 className="text-4xl font-black tracking-tighter uppercase italic">
                         <span className="text-gradient">My</span> Orders
                     </h1>
-                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.4em] mt-1">Purchase Protocol Tracking</p>
                 </div>
             </div>
 
