@@ -128,6 +128,11 @@ function LoginForm() {
                 </p>
             </div>
 
+            <div className="mt-12 text-center">
+                <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest italic">
+                    Lets start an unforgettable experience
+                </p>
+            </div>
         </div>
     );
 }
