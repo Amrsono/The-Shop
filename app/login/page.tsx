@@ -128,12 +128,6 @@ function LoginForm() {
                 </p>
             </div>
 
-            <div className="mt-12 text-center">
-                <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest">
-                    Authorized Personnel Only. <br />
-                    All sessions are digitally logged.
-                </p>
-            </div>
         </div>
     );
 }
