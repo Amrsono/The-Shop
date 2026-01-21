@@ -25,14 +25,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface Order {
     id: string;
-    full_name: string;
     total_amount: number;
     status: string;
     created_at: string;
     payment_method: string;
-    shipping_address: string;
-    email: string;
-    phone: string;
+    user_id: string;
+    profiles: {
+        full_name: string | null;
+        email: string | null;
+    } | null;
 }
 
 export default function OrdersPage() {
@@ -47,7 +48,13 @@ export default function OrdersPage() {
         try {
             const { data, error } = await supabase
                 .from('orders')
-                .select('*')
+                .select(`
+                    *,
+                    profiles (
+                        full_name,
+                        email
+                    )
+                `)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -96,8 +103,8 @@ export default function OrdersPage() {
         let result = orders.filter(order => {
             const matchesSearch =
                 order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                order.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                order.email?.toLowerCase().includes(searchQuery.toLowerCase());
+                order.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                order.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
             const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
 
@@ -212,8 +219,8 @@ export default function OrdersPage() {
                                         {typeof order.id === 'string' && order.id.length > 8 ? `${order.id.substring(0, 8)}...` : order.id}
                                     </TableCell>
                                     <TableCell className="py-8">
-                                        <p className="font-black text-white text-sm uppercase tracking-tight">{order.full_name || 'Anonymous'}</p>
-                                        <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">{order.email}</p>
+                                        <p className="font-black text-white text-sm uppercase tracking-tight">{order.profiles?.full_name || 'Anonymous'}</p>
+                                        <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">{order.profiles?.email || 'No email'}</p>
                                     </TableCell>
                                     <TableCell className="py-8 text-white/60 font-bold text-xs uppercase tracking-widest">
                                         {new Date(order.created_at).toLocaleDateString()}
