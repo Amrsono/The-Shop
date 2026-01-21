@@ -99,8 +99,18 @@ export default function AdminDashboard() {
                 salesGrowth: "0 Today"
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching dashboard stats:', error);
+            // Ensure we stop loading even on error
+            setStats({
+                totalRevenue: 0,
+                dailyOrders: 0,
+                activeSKUs: 0,
+                eliteCustomer: { name: 'Error', email: 'Data Retrieval Failed', amount: '0' },
+                elitePerformers: [],
+                revenueGrowth: '0%',
+                salesGrowth: '0'
+            });
         } finally {
             setIsLoading(false);
         }

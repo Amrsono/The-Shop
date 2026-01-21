@@ -30,7 +30,7 @@ export function AdminSidebar() {
     const { signOut } = useAuth();
 
     return (
-        <div className="h-screen w-64 glass-dark text-white flex flex-col fixed left-0 top-0 overflow-y-auto border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.3)]">
+        <div className="h-screen w-64 glass-dark text-white flex flex-col fixed left-0 top-0 overflow-y-auto border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.3)] z-[60]">
             <div className="p-8 border-b border-white/5 bg-white/5">
                 <h1 className="text-2xl font-black tracking-tighter uppercase italic">
                     <span className="text-gradient">Admin</span> Panel

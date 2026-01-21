@@ -46,9 +46,15 @@ export default function CheckoutPage() {
             const { data: order, error: orderError } = await supabase
                 .from('orders')
                 .insert({
-                    user_id: user?.id || null,
+                    user_id: user?.id || null, // Allow guest checkout!
                     total_amount: cartTotal,
-                    status: 'Order Received'
+                    status: 'Order Received',
+                    payment_method: 'Cash On Delivery',
+                    full_name: formData.fullName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    shipping_address: `${formData.address}, ${formData.city}`,
+                    city: formData.city
                 })
                 .select()
                 .single();
