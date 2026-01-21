@@ -124,7 +124,7 @@ function LoginForm() {
 
             <div className="mt-8 text-center">
                 <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
-                    No protocol identity? <Link href="/register" className="text-primary hover:underline">Register Now</Link>
+                    Not registered yet? <Link href="/register" className="text-primary hover:underline">click here to register</Link>
                 </p>
             </div>
 
