@@ -11,6 +11,8 @@ import { Truck, CreditCard, ChevronRight, MapPin, CheckCircle2 } from 'lucide-re
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/context/AuthContext';
 
 export default function CheckoutPage() {
     const { cartItems, cartTotal, clearCart } = useCart();
@@ -33,16 +35,54 @@ export default function CheckoutPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const { user } = useAuth();
+
     const handlePlaceOrder = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        try {
+            // 1. Insert the main order
+            const { data: order, error: orderError } = await supabase
+                .from('orders')
+                .insert({
+                    user_id: user?.id || null, // Allow guest checkout if needed, or enforce login
+                    total_amount: cartTotal,
+                    status: 'Order Received',
+                    payment_method: 'Cash On Delivery',
+                    full_name: formData.fullName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    shipping_address: `${formData.address}, ${formData.city}`,
+                    city: formData.city
+                })
+                .select()
+                .single();
 
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        clearCart();
+            if (orderError) throw orderError;
+
+            // 2. Insert order items
+            const orderItemsEntries = cartItems.map(item => ({
+                order_id: order.id,
+                product_id: item.id,
+                quantity: item.quantity,
+                price: item.price
+            }));
+
+            const { error: itemsError } = await supabase
+                .from('order_items')
+                .insert(orderItemsEntries);
+
+            if (itemsError) throw itemsError;
+
+            setIsSuccess(true);
+            clearCart();
+        } catch (error: any) {
+            console.error('Error placing order:', error);
+            alert(error.message || 'Failed to place order. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (isSuccess) {
