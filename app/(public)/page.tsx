@@ -105,8 +105,8 @@ export default function Home() {
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <h2 className="text-4xl md:text-6xl font-bold mb-6">End of Season Sale</h2>
                     <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">Up to 50% off on selected items. Don't miss out on the best deals of the year.</p>
-                    <Button size="lg" className="rounded-full px-10 py-8 text-xl bg-white text-black hover:bg-white/90">
-                        Shop Sale
+                    <Button size="lg" className="rounded-full px-10 py-8 text-xl bg-white text-black hover:bg-white/90" asChild>
+                        <Link href="/products">Shop Sale</Link>
                     </Button>
                 </div>
             </section>

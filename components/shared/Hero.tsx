@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 const slides = [
     {
@@ -86,8 +87,11 @@ export function Hero() {
                                     <Button
                                         size="lg"
                                         className="rounded-full px-10 py-8 text-xl bg-primary text-white hover:bg-primary/90 hover:scale-110 transition-all duration-500 border-none shadow-[0_0_20px_rgba(139,92,246,0.3)] group"
+                                        asChild
                                     >
-                                        {slide.cta} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        <Link href="/products">
+                                            {slide.cta} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </Link>
                                     </Button>
                                 </motion.div>
                             </div>
