@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Settings, Save, Star } from 'lucide-react';
 import { useLanguage } from '@/lib/context/LanguageContext';
 import { supabase } from '@/lib/supabase';
@@ -132,18 +131,19 @@ export default function AdminRewardsConfigPage() {
                     </CardHeader>
                     <CardContent className="p-10 space-y-6">
                         <div className="flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10">
-                            <div>
-                                <Label className="text-base font-black text-white uppercase tracking-wide">
+                            <div className="flex-1">
+                                <Label className="text-base font-black text-white uppercase tracking-wide cursor-pointer">
                                     {t('enable_rewards')}
                                 </Label>
                                 <p className="text-xs text-white/40 mt-1 font-medium">
                                     Turn rewards system on or off
                                 </p>
                             </div>
-                            <Switch
+                            <input
+                                type="checkbox"
                                 checked={config.enabled}
-                                onCheckedChange={(checked) => setConfig({ ...config, enabled: checked })}
-                                className="data-[state=checked]:bg-primary"
+                                onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
+                                className="w-12 h-12 cursor-pointer accent-primary"
                             />
                         </div>
                     </CardContent>
