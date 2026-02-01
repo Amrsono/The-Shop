@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { SalesChart } from '@/components/admin/SalesChart';
 import { BadgeDollarSign, CreditCard, Package, Users, RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 interface DashboardStats {
     totalRevenue: number;
@@ -27,6 +28,7 @@ interface DashboardStats {
 export default function AdminDashboard() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { t, dir } = useLanguage();
 
     const fetchStats = async () => {
         setIsLoading(true);
@@ -65,14 +67,14 @@ export default function AdminDashboard() {
             const profileMap: Record<string, { name: string, email: string }> = {};
             profiles.forEach(p => {
                 profileMap[p.id] = {
-                    name: p.full_name || 'Anonymous User',
+                    name: p.full_name || t('anonymous_user'),
                     email: p.email || 'N/A'
                 };
             });
 
             orders.forEach(order => {
                 if (!order.user_id) return;
-                const userData = profileMap[order.user_id] || { name: 'Legacy User', email: 'N/A' };
+                const userData = profileMap[order.user_id] || { name: t('legacy_user'), email: 'N/A' };
                 if (!userSpending[order.user_id]) {
                     userSpending[order.user_id] = { amount: 0, email: userData.email, name: userData.name };
                 }
@@ -87,7 +89,7 @@ export default function AdminDashboard() {
                     amount: p.amount.toLocaleString()
                 }));
 
-            const eliteCustomer = sortedPerformers[0] || { name: 'No Data', email: 'N/A', amount: '0' };
+            const eliteCustomer = sortedPerformers[0] || { name: t('no_data'), email: 'N/A', amount: '0' };
 
             setStats({
                 totalRevenue,
@@ -106,7 +108,7 @@ export default function AdminDashboard() {
                 totalRevenue: 0,
                 dailyOrders: 0,
                 activeSKUs: 0,
-                eliteCustomer: { name: 'Error', email: 'Data Retrieval Failed', amount: '0' },
+                eliteCustomer: { name: t('error'), email: t('data_retrieval_failed'), amount: '0' },
                 elitePerformers: [],
                 revenueGrowth: '0%',
                 salesGrowth: '0'
@@ -128,21 +130,21 @@ export default function AdminDashboard() {
                     <RefreshCw className="w-16 h-16 text-primary animate-spin relative" />
                 </div>
                 <p className="text-xs text-white/40 font-black uppercase tracking-[0.5em] animate-pulse italic">
-                    Initializing Command Center
+                    {t('initializing_command_center')}
                 </p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-12" dir={dir}>
             <div className="relative">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-none mb-3">
-                            <span className="text-gradient">Dashboard</span>
+                            <span className="text-gradient">{t('dashboard')}</span>
                         </h1>
-                        <p className="text-xs text-white/40 font-bold uppercase tracking-[0.3em] ml-1">Live Intelligence Overview</p>
+                        <p className="text-xs text-white/40 font-bold uppercase tracking-[0.3em] ml-1">{t('live_intelligence_overview')}</p>
                     </div>
                     <button
                         onClick={fetchStats}
@@ -159,11 +161,11 @@ export default function AdminDashboard() {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <BadgeDollarSign className="w-12 h-12 text-white" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">Total Revenue</p>
-                    <div className="text-3xl font-black text-white italic tracking-tighter mb-2">{stats?.totalRevenue.toLocaleString()} LE</div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">{t('total_revenue')}</p>
+                    <div className="text-3xl font-black text-white italic tracking-tighter mb-2">{stats?.totalRevenue.toLocaleString()} {t('currency_le')}</div>
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">+0%</span>
-                        <span className="text-[10px] font-bold text-white/20 uppercase">Lifetime Volume</span>
+                        <span className="text-[10px] font-bold text-white/20 uppercase">{t('lifetime_volume')}</span>
                     </div>
                 </div>
 
@@ -171,12 +173,12 @@ export default function AdminDashboard() {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <CreditCard className="w-12 h-12 text-white" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">Daily Sales</p>
-                    <div className="text-3xl font-black text-white italic tracking-tighter mb-2">+{stats?.dailyOrders} Orders</div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">{t('daily_sales')}</p>
+                    <div className="text-3xl font-black text-white italic tracking-tighter mb-2">+{stats?.dailyOrders} {t('orders_count')}</div>
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black text-primary uppercase">Today's Transactions</span>
+                        <span className="text-[10px] font-black text-primary uppercase">{t('todays_transactions')}</span>
                         <div className="w-1 h-1 rounded-full bg-white/10" />
-                        <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">LIVE</span>
+                        <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">{t('live')}</span>
                     </div>
                 </div>
 
@@ -184,11 +186,11 @@ export default function AdminDashboard() {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Package className="w-12 h-12 text-white" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">Active Assets</p>
-                    <div className="text-3xl font-black text-white italic tracking-tighter mb-2">{stats?.activeSKUs} SKU</div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">{t('active_assets')}</p>
+                    <div className="text-3xl font-black text-white italic tracking-tighter mb-2">{stats?.activeSKUs} {t('sku')}</div>
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full">Inventory Total</span>
-                        <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest ml-auto">Verified</span>
+                        <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t('inventory_total')}</span>
+                        <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest ml-auto">{t('verified')}</span>
                     </div>
                 </div>
 
@@ -196,9 +198,9 @@ export default function AdminDashboard() {
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Users className="w-12 h-12 text-white" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">Elite Customer</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-4">{t('elite_customer')}</p>
                     <div className="text-3xl font-black text-white italic tracking-tighter mb-2 truncate max-w-[180px]">{stats?.eliteCustomer.name}</div>
-                    <div className="text-[10px] font-black bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded-full w-fit mt-1 uppercase tracking-widest">{stats?.eliteCustomer.amount} LE Volume</div>
+                    <div className="text-[10px] font-black bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded-full w-fit mt-1 uppercase tracking-widest">{stats?.eliteCustomer.amount} {t('le_volume')}</div>
                 </div>
             </div>
 
@@ -210,8 +212,8 @@ export default function AdminDashboard() {
 
                 <div className="lg:col-span-3 glass rounded-[2.5rem] border-white/5 shadow-2xl overflow-hidden">
                     <div className="p-8 border-b border-white/5 bg-white/5">
-                        <h3 className="text-xl font-black uppercase italic tracking-tight text-white">Elite Performers</h3>
-                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">High Transaction Volume</p>
+                        <h3 className="text-xl font-black uppercase italic tracking-tight text-white">{t('elite_performers')}</h3>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">{t('high_transaction_volume')}</p>
                     </div>
                     <div className="p-8 space-y-8">
                         {stats?.elitePerformers.map((customer, i) => (
@@ -224,8 +226,8 @@ export default function AdminDashboard() {
                                     <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">{customer.email}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-lg font-black text-primary tracking-tighter italic">{customer.amount} LE</p>
-                                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Verified</p>
+                                    <p className="text-lg font-black text-primary tracking-tighter italic">{customer.amount} {t('currency_le')}</p>
+                                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">{t('verified')}</p>
                                 </div>
                             </div>
                         ))}

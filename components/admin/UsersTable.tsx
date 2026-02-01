@@ -9,7 +9,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Star, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { User, Shield, Star, Clock, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Profile {
@@ -27,26 +28,28 @@ interface Profile {
 
 interface UsersTableProps {
     users: Profile[];
+    onAdjustPoints?: (user: Profile) => void;
 }
 
-export function UsersTable({ users }: UsersTableProps) {
+export function UsersTable({ users, onAdjustPoints }: UsersTableProps) {
     return (
         <div className="glass-dark rounded-[2.5rem] overflow-hidden border-white/5 shadow-2xl">
             <Table>
                 <TableHeader className="bg-white/5">
                     <TableRow className="border-white/5 hover:bg-transparent text-center">
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pl-8 text-left">Protocol Identity</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Authority</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pl-8 text-left">Customer Account</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">User Type</TableHead>
                         <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Orders</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Total Valuation</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Primary Asset</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Orders Total</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Most Bought</TableHead>
                         <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Loyalty</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-right pr-8">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {users.length === 0 ? (
                         <TableRow className="hover:bg-transparent">
-                            <TableCell colSpan={6} className="h-60 text-center">
+                            <TableCell colSpan={7} className="h-60 text-center">
                                 <div className="flex flex-col items-center justify-center gap-4 opacity-20">
                                     <User className="w-12 h-12" />
                                     <p className="font-black uppercase tracking-[0.4em] text-xs">No user protocols detected.</p>
@@ -103,6 +106,21 @@ export function UsersTable({ users }: UsersTableProps) {
                                             </div>
                                             <p className="font-black text-white text-sm">{user.loyalty_points.toLocaleString()}</p>
                                         </div>
+                                    </TableCell>
+                                    <TableCell className="py-8 pr-8">
+                                        {onAdjustPoints && (
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    onClick={() => onAdjustPoints(user)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="rounded-xl border-primary/20 bg-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase text-[10px] tracking-widest"
+                                                >
+                                                    <Settings className="w-3 h-3 mr-2" />
+                                                    Adjust
+                                                </Button>
+                                            </div>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             );

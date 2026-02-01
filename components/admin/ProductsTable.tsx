@@ -29,31 +29,35 @@ interface ProductsTableProps {
     onDelete: (id: string) => void;
 }
 
+import { useLanguage } from '@/lib/context/LanguageContext';
+
 export function ProductsTable({ products, onEdit, onDelete }: ProductsTableProps) {
+    const { t } = useLanguage();
+
     return (
         <div className="glass-dark rounded-[2rem] overflow-hidden border-white/5 shadow-2xl">
             <Table>
                 <TableHeader className="bg-white/5">
                     <TableRow className="border-white/5 hover:bg-transparent">
-                        <TableHead className="w-[120px] py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pl-8">Entry</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Identification</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Division</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Value</TableHead>
-                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Current Units</TableHead>
-                        <TableHead className="text-right py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pr-8">Operations</TableHead>
+                        <TableHead className="w-[120px] py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ps-8 text-start">{t('table_entry')}</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('table_id')}</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('table_division')}</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('table_value')}</TableHead>
+                        <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('table_units')}</TableHead>
+                        <TableHead className="text-end py-6 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pe-8">{t('table_operations')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {products.length === 0 ? (
                         <TableRow className="hover:bg-transparent">
                             <TableCell colSpan={6} className="h-40 text-center text-white/20 font-black uppercase tracking-widest text-xs">
-                                No catalog assets discovered.
+                                {t('no_products_found')}
                             </TableCell>
                         </TableRow>
                     ) : (
                         products.map((product) => (
                             <TableRow key={product.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                                <TableCell className="py-6 pl-8">
+                                <TableCell className="py-6 ps-8">
                                     <div className="relative h-16 w-16 rounded-2xl overflow-hidden glass border-white/20 shadow-xl group-hover:scale-110 transition-transform">
                                         <Image src={product.image || 'https://via.placeholder.com/150'} alt={product.name} fill className="object-cover" />
                                     </div>
@@ -67,7 +71,7 @@ export function ProductsTable({ products, onEdit, onDelete }: ProductsTableProps
                                         {product.category}
                                     </span>
                                 </TableCell>
-                                <TableCell className="py-6 font-black text-white">{product.price.toLocaleString()} LE</TableCell>
+                                <TableCell className="py-6 font-black text-white">{product.price.toLocaleString()} {t('currency_le')}</TableCell>
                                 <TableCell className="py-6">
                                     <div className="flex items-center gap-3">
                                         <div className={cn(
@@ -82,7 +86,7 @@ export function ProductsTable({ products, onEdit, onDelete }: ProductsTableProps
                                         </span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-right py-6 pr-8">
+                                <TableCell className="text-end py-6 pe-8">
                                     <div className="flex justify-end gap-2">
                                         <Button
                                             variant="ghost"

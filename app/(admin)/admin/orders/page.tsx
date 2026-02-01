@@ -36,10 +36,8 @@ interface OrderItem {
     product_id: string;
     quantity: number;
     price: number;
-    products: {
-        name: string;
-        image_url?: string;
-    } | null;
+    name: string | null;
+    image: string | null;
 }
 
 interface Order {
@@ -55,11 +53,9 @@ interface Order {
     shipping_address: string | null;
     city: string | null;
     order_items?: OrderItem[];
-    profiles: {
-        full_name: string | null;
-        email: string | null;
-    } | null;
 }
+
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -69,6 +65,7 @@ export default function OrdersPage() {
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'value_high' | 'value_low'>('newest');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const { t, language, dir } = useLanguage();
 
     const fetchOrders = async () => {
         setIsLoading(true);
@@ -77,16 +74,8 @@ export default function OrdersPage() {
                 .from('orders')
                 .select(`
                     *,
-                    profiles (
-                        full_name,
-                        email
-                    ),
                     order_items (
-                        *,
-                        products (
-                            name,
-                            image_url
-                        )
+                        *
                     )
                 `)
                 .order('created_at', { ascending: false });
@@ -106,12 +95,22 @@ export default function OrdersPage() {
 
     const handleStatusChange = async (orderId: string, newStatus: string) => {
         try {
+            // Get the order details first
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            // Update order status
             const { error } = await supabase
                 .from('orders')
                 .update({ status: newStatus })
                 .eq('id', orderId);
 
             if (error) throw error;
+
+            // Award loyalty points if order is being marked as Delivered
+            if (newStatus === 'Delivered' && order.user_id) {
+                await awardLoyaltyPoints(order.user_id, order.id, order.total_amount);
+            }
 
             setOrders(prev =>
                 prev.map(order =>
@@ -120,6 +119,77 @@ export default function OrdersPage() {
             );
         } catch (error) {
             console.error('Error updating status:', error);
+        }
+    };
+
+    const awardLoyaltyPoints = async (userId: string, orderId: string, orderAmount: number) => {
+        try {
+            // Fetch rewards config
+            const { data: config, error: configError } = await supabase
+                .from('rewards_config')
+                .select('*')
+                .eq('id', 1)
+                .single();
+
+            if (configError || !config || !config.enabled) {
+                console.log('Rewards system not enabled');
+                return;
+            }
+
+            // Calculate points (import from utils)
+            const { calculatePointsEarned } = await import('@/lib/utils/rewards');
+            const pointsEarned = calculatePointsEarned(orderAmount, config.points_per_le);
+
+            if (pointsEarned <= 0) return;
+
+            // Check if points already awarded for this order
+            const { data: existing } = await supabase
+                .from('loyalty_transactions')
+                .select('id')
+                .eq('order_id', orderId)
+                .eq('transaction_type', 'earned')
+                .single();
+
+            if (existing) {
+                console.log('Points already awarded for this order');
+                return;
+            }
+
+            // Create transaction record
+            const { error: txError } = await supabase
+                .from('loyalty_transactions')
+                .insert({
+                    user_id: userId,
+                    order_id: orderId,
+                    points_change: pointsEarned,
+                    transaction_type: 'earned',
+                    description: `Points earned from order ${orderId.substring(0, 8)}`
+                });
+
+            if (txError) throw txError;
+
+            // Update user's total points
+            // First get current points
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('loyalty_points')
+                .eq('id', userId)
+                .single();
+
+            const currentPoints = profile?.loyalty_points || 0;
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({
+                    loyalty_points: currentPoints + pointsEarned
+                })
+                .eq('id', userId);
+
+            if (updateError) throw updateError;
+
+            console.log(`Awarded ${pointsEarned} points to user ${userId}`);
+        } catch (error) {
+            console.error('Error awarding loyalty points:', error);
         }
     };
 
@@ -137,10 +207,11 @@ export default function OrdersPage() {
         let result = orders.filter(order => {
             const matchesSearch =
                 order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (order.full_name || order.profiles?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (order.email || order.profiles?.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (order.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (order.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (order.phone || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (order.city || '').toLowerCase().includes(searchQuery.toLowerCase());
+                (order.city || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (order.order_items?.some(item => (item.name || '').toLowerCase().includes(searchQuery.toLowerCase())) ?? false);
 
             const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
 
@@ -158,13 +229,13 @@ export default function OrdersPage() {
     }, [orders, searchQuery, statusFilter, sortOrder]);
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-12" dir={dir}>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                 <div>
                     <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-none mb-3">
-                        <span className="text-gradient">Orders</span>
+                        <span className="text-gradient">{t('orders')}</span>
                     </h1>
-                    <p className="text-xs text-white/40 font-bold uppercase tracking-[0.3em] ml-1">Live Transaction Hub</p>
+                    <p className="text-xs text-white/40 font-bold uppercase tracking-[0.3em] ml-1">{t('live_transaction_hub')}</p>
                 </div>
                 <Button
                     onClick={fetchOrders}
@@ -178,15 +249,15 @@ export default function OrdersPage() {
             {/* Filtering Bar */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                 <div className="lg:col-span-5 relative group">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-primary transition-all" />
+                    <Search className={`absolute ${dir === 'rtl' ? 'right-5' : 'left-5'} top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-primary transition-all`} />
                     <Input
-                        placeholder="Search ID, Customer, Email, or City..."
+                        placeholder={t('search_placeholder_orders')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-16 bg-white/5 border-white/10 rounded-2xl pl-14 text-white font-bold placeholder:text-white/10 focus:ring-primary transition-all"
+                        className={`h-16 bg-white/5 border-white/10 rounded-2xl ${dir === 'rtl' ? 'pr-14 pl-5' : 'pl-14 pr-5'} text-white font-bold placeholder:text-white/10 focus:ring-primary transition-all`}
                     />
                     {searchQuery && (
-                        <button onClick={() => setSearchQuery('')} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-all">
+                        <button onClick={() => setSearchQuery('')} className={`absolute ${dir === 'rtl' ? 'left-5' : 'right-5'} top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-all`}>
                             <X className="w-4 h-4" />
                         </button>
                     )}
@@ -197,11 +268,11 @@ export default function OrdersPage() {
                         <SelectTrigger className="h-16 w-full bg-white/5 border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-primary focus:border-primary cursor-pointer hover:bg-white/10 transition-all shadow-none outline-none">
                             <div className="flex items-center gap-3">
                                 <Filter className="w-4 h-4 text-primary" />
-                                <SelectValue placeholder="Status Protocol" />
+                                <SelectValue placeholder={t('status_protocol')} />
                             </div>
                         </SelectTrigger>
                         <SelectContent position="popper" className="glass-dark border-white/10 rounded-2xl p-2 z-[100] min-w-[200px] shadow-2xl">
-                            <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">All Protocols</SelectItem>
+                            <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">{t('all')}</SelectItem>
                             <SelectItem value="Order Received" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">Order Received</SelectItem>
                             <SelectItem value="Processing" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">Processing</SelectItem>
                             <SelectItem value="Delivered" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">Delivered</SelectItem>
@@ -215,14 +286,14 @@ export default function OrdersPage() {
                         <SelectTrigger className="h-16 w-full bg-white/5 border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-primary focus:border-primary cursor-pointer hover:bg-white/10 transition-all shadow-none outline-none">
                             <div className="flex items-center gap-3">
                                 <ArrowUpDown className="w-4 h-4 text-primary" />
-                                <SelectValue placeholder="Sort Sequence" />
+                                <SelectValue placeholder={t('sort_sequence')} />
                             </div>
                         </SelectTrigger>
                         <SelectContent position="popper" className="glass-dark border-white/10 rounded-2xl p-2 z-[100] min-w-[200px] shadow-2xl">
-                            <SelectItem value="newest" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">Newest First</SelectItem>
-                            <SelectItem value="oldest" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">Oldest First</SelectItem>
-                            <SelectItem value="value_high" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">Highest Value</SelectItem>
-                            <SelectItem value="value_low" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">Lowest Value</SelectItem>
+                            <SelectItem value="newest" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">{t('newest_first')}</SelectItem>
+                            <SelectItem value="oldest" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">{t('oldest_first')}</SelectItem>
+                            <SelectItem value="value_high" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">{t('highest_value')}</SelectItem>
+                            <SelectItem value="value_low" className="text-[10px] font-black uppercase tracking-widest py-3 hover:bg-white/5 rounded-xl cursor-pointer">{t('lowest_value')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -232,29 +303,29 @@ export default function OrdersPage() {
                 {isLoading && (
                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm gap-4">
                         <RefreshCw className="w-10 h-10 text-primary animate-spin" />
-                        <p className="text-[10px] text-white/40 font-black uppercase tracking-widest animate-pulse">Retrieving Protocols</p>
+                        <p className="text-[10px] text-white/40 font-black uppercase tracking-widest animate-pulse">{t('retrieving_protocols')}</p>
                     </div>
                 )}
 
                 <Table>
                     <TableHeader className="bg-white/10">
                         <TableRow className="border-white/5 hover:bg-transparent">
-                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pl-8">Order ID</TableHead>
-                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Customer Entity</TableHead>
-                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Timestamp</TableHead>
-                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Method</TableHead>
-                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Net Value</TableHead>
-                            <TableHead className="text-right py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pr-8">Status Protocol</TableHead>
+                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ps-8 text-start">{t('order_id')}</TableHead>
+                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('customer_entity')}</TableHead>
+                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('timestamp')}</TableHead>
+                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('method')}</TableHead>
+                            <TableHead className="py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 text-start">{t('net_value')}</TableHead>
+                            <TableHead className="text-end py-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 pe-8">{t('status_protocol')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <AnimatePresence mode="popLayout">
                             {filteredAndSortedOrders.map((order) => (
                                 <TableRow key={order.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                                    <TableCell className="py-8 pl-8">
+                                    <TableCell className="py-8 ps-8">
                                         <div className="flex flex-col">
                                             <span className="font-mono font-black text-[10px] text-primary mb-1 uppercase tracking-tighter">
-                                                ID: {typeof order.id === 'string' ? order.id.substring(0, 8) : order.id}
+                                                {t('order_id_prefix')} {typeof order.id === 'string' ? order.id.substring(0, 8) : order.id}
                                             </span>
                                             <Button
                                                 variant="ghost"
@@ -266,15 +337,15 @@ export default function OrdersPage() {
                                                 }}
                                             >
                                                 <Eye className="w-3 h-3" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest">Details</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">{t('details')}</span>
                                             </Button>
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-8">
                                         <div className="flex flex-col gap-0.5">
-                                            <p className="font-black text-white text-sm uppercase tracking-tight">{order.full_name || order.profiles?.full_name || 'Anonymous'}</p>
-                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest leading-none">{(order.email || order.profiles?.email) || 'No email'}</p>
-                                            <p className="text-[9px] text-primary/60 font-black uppercase tracking-widest mt-1">{order.phone || 'No Phone'}</p>
+                                            <p className="font-black text-white text-sm uppercase tracking-tight">{order.full_name || 'Anonymous'}</p>
+                                            <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest leading-none">{order.email || t('no_email')}</p>
+                                            <p className="text-[9px] text-primary/60 font-black uppercase tracking-widest mt-1">{order.phone || t('no_phone')}</p>
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-8 text-white/60 font-bold text-xs uppercase tracking-widest">
@@ -285,8 +356,8 @@ export default function OrdersPage() {
                                             {order.payment_method}
                                         </span>
                                     </TableCell>
-                                    <TableCell className="py-8 font-black text-white text-lg tracking-tighter italic">{order.total_amount?.toLocaleString()} LE</TableCell>
-                                    <TableCell className="text-right py-8 pr-8">
+                                    <TableCell className="py-8 font-black text-white text-lg tracking-tighter italic">{order.total_amount?.toLocaleString()} {t('currency_le')}</TableCell>
+                                    <TableCell className="text-end py-8 pe-8">
                                         <div className="flex justify-end">
                                             <Select
                                                 value={order.status}
@@ -315,7 +386,7 @@ export default function OrdersPage() {
 
                 {filteredAndSortedOrders.length === 0 && !isLoading && (
                     <div className="p-20 text-center">
-                        <p className="text-xl font-black text-white/20 uppercase italic tracking-widest">No order protocols matching search</p>
+                        <p className="text-xl font-black text-white/20 uppercase italic tracking-widest">{t('protocols_no_match')}</p>
                     </div>
                 )}
             </div>
@@ -335,47 +406,47 @@ export default function OrdersPage() {
                                     </Badge>
                                     <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">#{selectedOrder?.id.substring(0, 8)}</span>
                                 </div>
-                                <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">Order Details</h2>
+                                <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">{t('order_details')}</h2>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Transaction Total</p>
-                                <p className="text-3xl font-black text-primary italic tracking-tighter">{selectedOrder?.total_amount.toLocaleString()} LE</p>
+                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">{t('transaction_total')}</p>
+                                <p className="text-3xl font-black text-primary italic tracking-tighter">{selectedOrder?.total_amount.toLocaleString()} {t('currency_le')}</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
                             <div className="space-y-6">
                                 <div>
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">Customer Intelligence</p>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">{t('customer_intelligence')}</p>
                                     <div className="glass p-5 rounded-2xl border-white/5 space-y-3">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-bold text-white/30 uppercase">Full Name</span>
-                                            <span className="text-xs font-black text-white uppercase">{selectedOrder?.full_name || selectedOrder?.profiles?.full_name || 'N/A'}</span>
+                                            <span className="text-[10px] font-bold text-white/30 uppercase">{t('full_name')}</span>
+                                            <span className="text-xs font-black text-white uppercase">{selectedOrder?.full_name || 'N/A'}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-bold text-white/30 uppercase">Email</span>
-                                            <span className="text-xs font-black text-white">{(selectedOrder?.email || selectedOrder?.profiles?.email) || 'N/A'}</span>
+                                            <span className="text-[10px] font-bold text-white/30 uppercase">{t('email_address')}</span>
+                                            <span className="text-xs font-black text-white">{selectedOrder?.email || 'N/A'}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-bold text-white/30 uppercase">Phone</span>
+                                            <span className="text-[10px] font-bold text-white/30 uppercase">{t('phone_number')}</span>
                                             <span className="text-xs font-black text-primary">{selectedOrder?.phone || 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">Logistics & Deployment</p>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">{t('logistics_deployment')}</p>
                                     <div className="glass p-5 rounded-2xl border-white/5 space-y-3">
                                         <div className="flex justify-start gap-4 flex-col">
-                                            <span className="text-[10px] font-bold text-white/30 uppercase">Address</span>
-                                            <span className="text-xs font-black text-white uppercase tracking-tight leading-relaxed">{selectedOrder?.shipping_address || 'Collection Only'}</span>
+                                            <span className="text-[10px] font-bold text-white/30 uppercase">{t('address')}</span>
+                                            <span className="text-xs font-black text-white uppercase tracking-tight leading-relaxed">{selectedOrder?.shipping_address || t('collection_only')}</span>
                                         </div>
                                         <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                                            <span className="text-[10px] font-bold text-white/30 uppercase">City Hub</span>
+                                            <span className="text-[10px] font-bold text-white/30 uppercase">{t('city_hub')}</span>
                                             <span className="text-xs font-black text-white uppercase">{selectedOrder?.city || 'N/A'}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-bold text-white/30 uppercase">Method</span>
+                                            <span className="text-[10px] font-bold text-white/30 uppercase">{t('method')}</span>
                                             <Badge variant="outline" className="text-[9px] font-black border-white/10 uppercase tracking-widest bg-transparent outline-none">{selectedOrder?.payment_method}</Badge>
                                         </div>
                                     </div>
@@ -383,29 +454,29 @@ export default function OrdersPage() {
                             </div>
 
                             <div>
-                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">Inventory Manifest</p>
+                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">{t('inventory_manifest')}</p>
                                 <ScrollArea className="h-[300px] glass rounded-2xl border-white/5 overflow-hidden">
                                     <div className="p-5 space-y-6">
                                         {selectedOrder?.order_items?.map((item, idx) => (
                                             <div key={idx} className="flex gap-4 items-center">
                                                 <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                                    {item.products?.image_url ? (
-                                                        <img src={item.products.image_url} alt="" className="w-full h-full object-cover" />
+                                                    {item.image ? (
+                                                        <img src={item.image} alt="" className="w-full h-full object-cover" />
                                                     ) : (
                                                         <Package className="w-5 h-5 text-white/20" />
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[10px] font-black text-white uppercase truncate">{item.products?.name || 'Unknown Asset'}</p>
-                                                    <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">Qty: {item.quantity}</p>
+                                                    <p className="text-[10px] font-black text-white uppercase truncate">{item.name || t('unknown_asset')}</p>
+                                                    <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">{t('qty')}: {item.quantity}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xs font-black text-white italic tracking-tighter">{(item.price * item.quantity).toLocaleString()} LE</p>
+                                                    <p className="text-xs font-black text-white italic tracking-tighter">{(item.price * item.quantity).toLocaleString()} {t('currency_le')}</p>
                                                 </div>
                                             </div>
                                         ))}
                                         {(!selectedOrder?.order_items || selectedOrder.order_items.length === 0) && (
-                                            <p className="text-[10px] font-black text-white/20 uppercase text-center py-10 tracking-widest">No Manifest Data</p>
+                                            <p className="text-[10px] font-black text-white/20 uppercase text-center py-10 tracking-widest">{t('no_manifest_data')}</p>
                                         )}
                                     </div>
                                 </ScrollArea>
@@ -417,7 +488,7 @@ export default function OrdersPage() {
                                 onClick={() => setIsDetailsOpen(false)}
                                 className="w-full h-16 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 font-black uppercase tracking-[0.2em] text-[10px] text-white/60 hover:text-white transition-all shadow-none"
                             >
-                                Close Protocol View
+                                {t('close_protocol_view')}
                             </Button>
                         </div>
                     </div>

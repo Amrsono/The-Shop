@@ -21,8 +21,11 @@ interface ProductCardProps {
     product: Product;
 }
 
+import { useLanguage } from '@/lib/context/LanguageContext';
+
 export function ProductCard({ product }: ProductCardProps) {
     const { addToCart } = useCart();
+    const { t } = useLanguage();
 
     return (
         <motion.div
@@ -33,7 +36,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 <div className="relative aspect-square overflow-hidden bg-white/5">
                     {product.isNew && (
                         <Badge className="absolute top-2 left-2 z-10 bg-primary/80 backdrop-blur-md text-white border-white/20 pointer-events-none">
-                            New Arrival
+                            {t('new_arrival')}
                         </Badge>
                     )}
                     <Image
@@ -44,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     />
                     <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <Button variant="secondary" size="lg" className="rounded-full translate-y-4 group-hover:translate-y-0 transition-all duration-300 glass border-white/20">
-                            Quick View
+                            {t('quick_view')}
                         </Button>
                     </div>
                 </div>
@@ -58,7 +61,7 @@ export function ProductCard({ product }: ProductCardProps) {
                         className="w-full rounded-2xl h-12 bg-primary text-white hover:bg-primary/80 shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all active:scale-[0.98]"
                         onClick={() => addToCart(product)}
                     >
-                        <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
+                        <ShoppingCart className="w-4 h-4 mr-2" /> {t('add_to_cart')}
                     </Button>
                 </CardFooter>
             </Card>

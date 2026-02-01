@@ -1,0 +1,5 @@
+-- Check the actual columns in order_items table
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name = 'order_items'
+ORDER BY ordinal_position;

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { PointsAdjustmentDialog } from '@/components/admin/PointsAdjustmentDialog';
 
 interface Profile {
     id: string;
@@ -27,24 +28,22 @@ export default function AdminUsersPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [error, setError] = useState<string | null>(null);
 
+    // Points adjustment dialog state
+    const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+
     const fetchUsers = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            // Fetch profiles with nested orders and items for aggregation
+            // Fetch profiles with nested orders for aggregation
             const { data, error } = await supabase
                 .from('profiles')
                 .select(`
                     *,
                     orders (
                         id,
-                        total_amount,
-                        order_items (
-                            quantity,
-                            products (
-                                name_en
-                            )
-                        )
+                        total_amount
                     )
                 `)
                 .order('created_at', { ascending: false });
@@ -57,29 +56,11 @@ export default function AdminUsersPage() {
                 const ordersCount = orders.length;
                 const totalSpent = orders.reduce((sum: number, order: any) => sum + (order.total_amount || 0), 0);
 
-                // Calculate most purchased product
-                const productCounts: Record<string, number> = {};
-                orders.forEach((order: any) => {
-                    order.order_items?.forEach((item: any) => {
-                        const productName = item.products?.name_en || 'Unknown Product';
-                        productCounts[productName] = (productCounts[productName] || 0) + (item.quantity || 1);
-                    });
-                });
-
-                let mostPurchasedProduct = 'N/A';
-                let maxCount = 0;
-                for (const [name, count] of Object.entries(productCounts)) {
-                    if (count > maxCount) {
-                        maxCount = count;
-                        mostPurchasedProduct = name;
-                    }
-                }
-
                 return {
                     ...user,
                     orders_count: ordersCount,
                     total_spent: totalSpent,
-                    most_purchased_product: mostPurchasedProduct
+                    most_purchased_product: 'N/A' // Simplified since order_items doesn't store product names
                 };
             });
 
@@ -95,6 +76,15 @@ export default function AdminUsersPage() {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    const handleOpenAdjustmentDialog = (user: Profile) => {
+        setSelectedUser(user);
+        setIsAdjustmentDialogOpen(true);
+    };
+
+    const handleAdjustmentSuccess = () => {
+        fetchUsers(); // Refresh user list
+    };
 
     const filteredUsers = users.filter((user) => {
         const query = searchQuery.toLowerCase();
@@ -177,7 +167,7 @@ export default function AdminUsersPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <UsersTable users={filteredUsers} />
+                    <UsersTable users={filteredUsers} onAdjustPoints={handleOpenAdjustmentDialog} />
                 </motion.div>
             </div>
 
@@ -203,8 +193,21 @@ export default function AdminUsersPage() {
                         <Star className="w-5 h-5 text-yellow-500" />
                     </div>
                     <p className="text-4xl font-black text-white">{users.reduce((acc, u) => acc + (u.loyalty_points || 0), 0).toLocaleString()}</p>
+                    <p className="text-xs text-white/40 font-bold mt-4 uppercase tracking-widest">Golden Tier</p>
                 </div>
             </div>
+
+            {/* Points Adjustment Dialog */}
+            {selectedUser && (
+                <PointsAdjustmentDialog
+                    userId={selectedUser.id}
+                    userName={selectedUser.full_name || 'User'}
+                    currentPoints={selectedUser.loyalty_points}
+                    isOpen={isAdjustmentDialogOpen}
+                    onClose={() => setIsAdjustmentDialogOpen(false)}
+                    onSuccess={handleAdjustmentSuccess}
+                />
+            )}
         </div>
     );
 }

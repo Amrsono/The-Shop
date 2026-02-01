@@ -11,35 +11,39 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-
-const slides = [
-    {
-        id: 1,
-        image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop',
-        title: 'Summer Collection 2026',
-        subtitle: 'Discover the latest trends in fashion.',
-        cta: 'Shop Now',
-    },
-    {
-        id: 2,
-        image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2071&auto=format&fit=crop',
-        title: 'Elegance Redefined',
-        subtitle: 'Premium quality for the modern lifestyle.',
-        cta: 'View Collection',
-    },
-    {
-        id: 3,
-        image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop',
-        title: 'Urban Streetwear',
-        subtitle: 'Express yourself with our unique styles.',
-        cta: 'Explore',
-    },
-];
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 export function Hero() {
+    const { t, language } = useLanguage();
+
+    const slides = [
+        {
+            id: 1,
+            image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop',
+            title: t('hero_title_1'),
+            subtitle: t('hero_subtitle_1'),
+            cta: t('hero_cta_1'),
+        },
+        {
+            id: 2,
+            image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2071&auto=format&fit=crop',
+            title: t('hero_title_2'),
+            subtitle: t('hero_subtitle_2'),
+            cta: t('hero_cta_2'),
+        },
+        {
+            id: 3,
+            image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop',
+            title: t('hero_title_3'),
+            subtitle: t('hero_subtitle_3'),
+            cta: t('hero_cta_3'),
+        },
+    ];
+
     return (
-        <section className="relative h-[80vh] w-full bg-black overflow-hidden">
+        <section className="relative h-[80vh] w-full bg-black overflow-hidden" dir="ltr">
             <Swiper
+                key={language} // Force re-render on language change
                 spaceBetween={0}
                 effect={'fade'}
                 speed={1000}
@@ -90,7 +94,12 @@ export function Hero() {
                                         asChild
                                     >
                                         <Link href="/products">
-                                            {slide.cta} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                            {slide.cta}
+                                            {language === 'ar' ? (
+                                                <ArrowRight className="mr-2 w-5 h-5 group-hover:-translate-x-1 transition-transform rotate-180" />
+                                            ) : (
+                                                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                            )}
                                         </Link>
                                     </Button>
                                 </motion.div>

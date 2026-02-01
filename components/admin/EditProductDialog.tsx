@@ -30,6 +30,8 @@ interface Product {
     stock: number;
     category: string;
     description?: string;
+    name_ar?: string;
+    description_ar?: string;
 }
 
 interface EditProductDialogProps {
@@ -48,11 +50,13 @@ export function EditProductDialog({
     const [formData, setFormData] = useState<Product>({
         id: '',
         name: '',
+        name_ar: '',
         price: 0,
         image: '',
         stock: 0,
         category: '',
         description: '',
+        description_ar: '',
     });
 
     const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -65,11 +69,13 @@ export function EditProductDialog({
             setFormData({
                 id: '',
                 name: '',
+                name_ar: '',
                 price: 0,
                 image: '',
                 stock: 0,
                 category: '',
                 description: '',
+                description_ar: '',
             });
             setImagePreview(null);
         }
@@ -116,132 +122,163 @@ export function EditProductDialog({
                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.3em] mt-1">Inventory Modification Protocol</p>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="p-8 space-y-8">
-                    <div className="grid gap-6">
-                        <div className="space-y-3">
-                            <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Product Name</Label>
-                            <Input
-                                id="name"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="Enter product name"
-                                required
-                                className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white font-bold"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Left Column: English details */}
+                        <div className="space-y-6">
                             <div className="space-y-3">
-                                <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Price (EGP)</Label>
+                                <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Product Name (EN)</Label>
                                 <Input
-                                    id="price"
-                                    name="price"
-                                    type="number"
-                                    value={formData.price}
+                                    id="name"
+                                    name="name"
+                                    value={formData.name}
                                     onChange={handleChange}
-                                    placeholder="0.00"
+                                    placeholder="Enter product name"
                                     required
                                     className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white font-bold"
                                 />
                             </div>
+
                             <div className="space-y-3">
-                                <Label htmlFor="stock" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Stock Amount</Label>
-                                <Input
-                                    id="stock"
-                                    name="stock"
-                                    type="number"
-                                    value={formData.stock}
+                                <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Description (EN)</Label>
+                                <Textarea
+                                    id="description"
+                                    name="description"
+                                    value={formData.description}
                                     onChange={handleChange}
-                                    placeholder="0"
-                                    required
-                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white font-bold"
+                                    placeholder="Enter product description"
+                                    className="min-h-[120px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white/80 font-medium leading-relaxed"
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                    <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Price (EGP)</Label>
+                                    <Input
+                                        id="price"
+                                        name="price"
+                                        type="number"
+                                        value={formData.price}
+                                        onChange={handleChange}
+                                        placeholder="0.00"
+                                        required
+                                        className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white font-bold"
+                                    />
+                                </div>
+                                <div className="space-y-3">
+                                    <Label htmlFor="stock" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Stock Amount</Label>
+                                    <Input
+                                        id="stock"
+                                        name="stock"
+                                        type="number"
+                                        value={formData.stock}
+                                        onChange={handleChange}
+                                        placeholder="0"
+                                        required
+                                        className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white font-bold"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <Label htmlFor="category" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Category Registry</Label>
+                                <Select value={formData.category} onValueChange={handleCategoryChange}>
+                                    <SelectTrigger className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary text-white font-bold">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent className="glass-dark border-white/10 shadow-3xl rounded-2xl">
+                                        <SelectItem value="Footwear" className="text-white hover:bg-white/5 py-3">Footwear</SelectItem>
+                                        <SelectItem value="Accessories" className="text-white hover:bg-white/5 py-3">Accessories</SelectItem>
+                                        <SelectItem value="Outerwear" className="text-white hover:bg-white/5 py-3">Outerwear</SelectItem>
+                                        <SelectItem value="Electronics" className="text-white hover:bg-white/5 py-3">Electronics</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
-                        <div className="space-y-3">
-                            <Label htmlFor="category" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Category Registry</Label>
-                            <Select value={formData.category} onValueChange={handleCategoryChange}>
-                                <SelectTrigger className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary text-white font-bold">
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent className="glass-dark border-white/10 shadow-3xl rounded-2xl">
-                                    <SelectItem value="Footwear" className="text-white hover:bg-white/5 py-3">Footwear</SelectItem>
-                                    <SelectItem value="Accessories" className="text-white hover:bg-white/5 py-3">Accessories</SelectItem>
-                                    <SelectItem value="Outerwear" className="text-white hover:bg-white/5 py-3">Outerwear</SelectItem>
-                                    <SelectItem value="Electronics" className="text-white hover:bg-white/5 py-3">Electronics</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        {/* Right Column: Arabic details & Image */}
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <Label htmlFor="name_ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1 text-right block" dir="rtl">Product Name (AR)</Label>
+                                <Input
+                                    id="name_ar"
+                                    name="name_ar"
+                                    value={formData.name_ar || ''}
+                                    onChange={handleChange}
+                                    placeholder="اسم المنتج"
+                                    className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white font-bold text-right"
+                                    dir="rtl"
+                                />
+                            </div>
 
-                        <div className="space-y-3">
-                            <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Universal Description</Label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                placeholder="Enter product description"
-                                className="min-h-[120px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white/80 font-medium leading-relaxed"
-                            />
-                        </div>
+                            <div className="space-y-3">
+                                <Label htmlFor="description_ar" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1 text-right block" dir="rtl">Description (AR)</Label>
+                                <Textarea
+                                    id="description_ar"
+                                    name="description_ar"
+                                    value={formData.description_ar || ''}
+                                    onChange={handleChange}
+                                    placeholder="وصف المنتج"
+                                    className="min-h-[120px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-white/80 font-medium leading-relaxed text-right"
+                                    dir="rtl"
+                                />
+                            </div>
 
-                        <div className="space-y-3">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Visual Identity Asset</Label>
-                            <div className="flex flex-col items-center gap-4">
-                                {imagePreview ? (
-                                    <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/10 group">
-                                        <Image
-                                            src={imagePreview}
-                                            alt="Preview"
-                                            fill
-                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="icon"
-                                                className="rounded-2xl h-12 w-12 shadow-2xl scale-75 group-hover:scale-100 transition-transform"
-                                                onClick={() => {
-                                                    setImagePreview(null);
-                                                    setFormData(prev => ({ ...prev, image: '' }));
-                                                }}
-                                            >
-                                                <X className="h-6 w-6" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-white/10 rounded-[2rem] cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <div className="p-4 bg-white/5 rounded-2xl mb-4 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
-                                                <Upload className="w-8 h-8 text-primary" />
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Visual Identity Asset</Label>
+                                <div className="flex flex-col items-center gap-4">
+                                    {imagePreview ? (
+                                        <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-white/10 group">
+                                            <Image
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                fill
+                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    className="rounded-2xl h-12 w-12 shadow-2xl scale-75 group-hover:scale-100 transition-transform"
+                                                    onClick={() => {
+                                                        setImagePreview(null);
+                                                        setFormData(prev => ({ ...prev, image: '' }));
+                                                    }}
+                                                >
+                                                    <X className="h-6 w-6" />
+                                                </Button>
                                             </div>
-                                            <p className="mb-2 text-sm text-white/60">
-                                                <span className="font-black uppercase tracking-widest text-[10px] text-primary">Upload Asset</span>
-                                            </p>
-                                            <p className="text-[8px] text-white/20 font-bold uppercase tracking-widest">
-                                                800x400 Dynamic Dimension
-                                            </p>
                                         </div>
-                                        <Input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                        />
-                                    </label>
-                                )}
+                                    ) : (
+                                        <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-white/10 rounded-[2rem] cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group">
+                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <div className="p-4 bg-white/5 rounded-2xl mb-4 group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                                                    <Upload className="w-8 h-8 text-primary" />
+                                                </div>
+                                                <p className="mb-2 text-sm text-white/60">
+                                                    <span className="font-black uppercase tracking-widest text-[10px] text-primary">Upload Asset</span>
+                                                </p>
+                                                <p className="text-[8px] text-white/20 font-bold uppercase tracking-widest">
+                                                    800x400 Dynamic Dimension
+                                                </p>
+                                            </div>
+                                            <Input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                            />
+                                        </label>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
                     <DialogFooter className="flex gap-4 pt-4 border-t border-white/5">
                         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white h-14 rounded-2xl flex-1 px-0">
-                            Cancel Protocol
+                            Cancel Changes
                         </Button>
                         <Button type="submit" className="h-14 bg-primary text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl flex-1 px-0 shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:scale-[1.02] transition-all">
-                            Finalize Modification
+                            Save Changes
                         </Button>
                     </DialogFooter>
                 </form>

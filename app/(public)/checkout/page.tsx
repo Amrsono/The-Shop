@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/context/AuthContext';
 import { cn, generateUUID } from '@/lib/utils';
+import { PointsRedemption } from '@/components/checkout/PointsRedemption';
 
 export default function CheckoutPage() {
     const { cartItems, cartTotal, clearCart } = useCart();
@@ -30,6 +31,18 @@ export default function CheckoutPage() {
         city: '',
         notes: '',
     });
+
+    // Points Redemption State
+    const [redeemedPoints, setRedeemedPoints] = useState(0);
+    const [pointsDiscount, setPointsDiscount] = useState(0);
+
+    const handlePointsApplied = (points: number, discount: number) => {
+        setRedeemedPoints(points);
+        setPointsDiscount(discount);
+    };
+
+    // Final total after points discount
+    const finalTotal = Math.max(0, cartTotal - pointsDiscount);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -79,7 +92,7 @@ export default function CheckoutPage() {
             const p1 = {
                 id: orderId,
                 user_id: user?.id || null, // Allow guest checkout!
-                total_amount: cartTotal,
+                total_amount: finalTotal, // Use final total after discount
                 status: 'Order Received',
                 payment_method: 'Cash On Delivery',
                 full_name: formData.fullName,
@@ -105,7 +118,9 @@ export default function CheckoutPage() {
                 order_id: orderId,
                 product_id: item.id,
                 quantity: item.quantity,
-                price: item.price
+                price: item.price,
+                name: item.name,
+                image: item.image
             }));
             console.log('Inserting order items:', orderItemsEntries);
 
@@ -120,6 +135,11 @@ export default function CheckoutPage() {
             }
             console.log('Order items inserted successfully');
 
+            // 3. Deduct redeemed loyalty points if any
+            if (redeemedPoints > 0 && user?.id) {
+                await deductLoyaltyPoints(user.id, orderId, redeemedPoints, pointsDiscount);
+            }
+
             setIsSuccess(true);
             clearCart();
         } catch (error: any) {
@@ -128,6 +148,46 @@ export default function CheckoutPage() {
         } finally {
             console.log('Order submission process finished (finally block)');
             setIsSubmitting(false);
+        }
+    };
+
+    const deductLoyaltyPoints = async (userId: string, orderId: string, points: number, discountAmount: number) => {
+        try {
+            // Create redemption transaction record
+            const { error: txError } = await supabase
+                .from('loyalty_transactions')
+                .insert({
+                    user_id: userId,
+                    order_id: orderId,
+                    points_change: -points, // Negative for redemption
+                    transaction_type: 'redeemed',
+                    description: `Redeemed ${points} points for ${discountAmount.toFixed(2)} LE discount on order ${orderId.substring(0, 8)}`
+                });
+
+            if (txError) throw txError;
+
+            // Deduct points from user's balance
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('loyalty_points')
+                .eq('id', userId)
+                .single();
+
+            const currentPoints = profile?.loyalty_points || 0;
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({
+                    loyalty_points: Math.max(0, currentPoints - points)
+                })
+                .eq('id', userId);
+
+            if (updateError) throw updateError;
+
+            console.log(`Deducted ${points} points from user ${userId}`);
+        } catch (error) {
+            console.error('Error deducting loyalty points:', error);
+            // Don't fail the order if points deduction fails
         }
     };
 
@@ -354,6 +414,15 @@ export default function CheckoutPage() {
                                 ))}
                             </div>
 
+                            {/* Points Redemption Section */}
+                            <div className="border-t border-white/5 pt-8">
+                                <PointsRedemption
+                                    userId={user?.id || null}
+                                    cartTotal={cartTotal}
+                                    onPointsApplied={handlePointsApplied}
+                                />
+                            </div>
+
                             <div className="border-t border-white/5 pt-8 space-y-6">
                                 <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
                                     <span>Subtotal</span>
@@ -363,10 +432,16 @@ export default function CheckoutPage() {
                                     <span>Shipping</span>
                                     <span>Complimentary</span>
                                 </div>
+                                {pointsDiscount > 0 && (
+                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">
+                                        <span>{t('discount_from_points')}</span>
+                                        <span>-{pointsDiscount.toFixed(2)} LE</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-baseline pt-4">
                                     <span className="text-xl font-black uppercase italic text-white/60 tracking-tighter leading-none">Total</span>
                                     <div className="text-right">
-                                        <span className="text-4xl font-black text-primary tracking-tighter leading-none">{cartTotal.toLocaleString()}</span>
+                                        <span className="text-4xl font-black text-primary tracking-tighter leading-none">{finalTotal.toLocaleString()}</span>
                                         <span className="text-xs font-black text-primary/60 ml-2 tracking-widest uppercase">EGP</span>
                                     </div>
                                 </div>

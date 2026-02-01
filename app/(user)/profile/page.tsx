@@ -5,15 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Gift, Package, User, MapPin, CreditCard, Save, CheckCircle2, Loader2, Camera, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/lib/context/LanguageContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PointsHistory } from '@/components/user/PointsHistory';
+import { useAuth } from '@/lib/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export default function UserProfile() {
     const { t } = useLanguage();
+    const { user } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [loyaltyPoints, setLoyaltyPoints] = useState(0);
 
     const [profileData, setProfileData] = useState({
         fullName: 'The User',
@@ -40,6 +45,28 @@ export default function UserProfile() {
         setIsSaving(false);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
+    };
+
+    // Fetch loyalty points
+    useEffect(() => {
+        if (user?.id) {
+            fetchLoyaltyPoints();
+        }
+    }, [user]);
+
+    const fetchLoyaltyPoints = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('loyalty_points')
+                .eq('id', user?.id)
+                .single();
+
+            if (error) throw error;
+            setLoyaltyPoints(data?.loyalty_points || 0);
+        } catch (error) {
+            console.error('Error fetching loyalty points:', error);
+        }
     };
 
     const removePaymentMethod = (id: number) => {
@@ -107,8 +134,8 @@ export default function UserProfile() {
                     <Gift className="absolute -bottom-6 -right-6 w-40 h-40 opacity-20 group-hover:scale-110 transition-transform duration-700" />
                     <div>
                         <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80 mb-2">{t('points')}</p>
-                        <div className="text-5xl font-black">2,450</div>
-                        <p className="text-sm opacity-80 mt-4 font-bold">~ EGP 245.00 value</p>
+                        <div className="text-5xl font-black">{loyaltyPoints.toLocaleString()}</div>
+                        <p className="text-sm opacity-80 mt-4 font-bold">~ EGP {(loyaltyPoints * 0.10).toFixed(2)} value</p>
                     </div>
                 </Card>
 
@@ -144,6 +171,9 @@ export default function UserProfile() {
                     </TabsTrigger>
                     <TabsTrigger value="orders" className="rounded-xl px-10 h-full data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all font-black uppercase tracking-widest text-[10px]">
                         {t('orders')}
+                    </TabsTrigger>
+                    <TabsTrigger value="points" className="rounded-xl px-10 h-full data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all font-black uppercase tracking-widest text-[10px]">
+                        {t('points_history')}
                     </TabsTrigger>
                 </TabsList>
 
@@ -281,6 +311,10 @@ export default function UserProfile() {
                             </div>
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                <TabsContent value="points" className="outline-none">
+                    {user?.id && <PointsHistory userId={user.id} />}
                 </TabsContent>
             </Tabs>
         </div>
